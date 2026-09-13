@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reddit Sentiment Analyzer</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background: #f4f6f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            width: 100%;
+            max-width: 580px;
+            padding: 30px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .header h1 {
+            font-size: 1.4rem;
+            color: #1c1c1c;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: #6c757d;
+            font-size: 0.95rem;
+            margin-bottom: 24px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 130px;
+            padding: 12px;
+            border: 1.5px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+            resize: vertical;
+        }
+
+        textarea:focus {
+            border-color: #ff4500;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 15px;
+            padding: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #fff;
+            background: #ff4500;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #e03d00;
+        }
+
+        button:disabled {
+            background: #adb5bd;
+            cursor: not-allowed;
+        }
+
+        #result {
+            margin-top: 24px;
+            display: none;
+            text-align: center;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .positive {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .negative {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .neutral {
+            background-color: #e2e3e5;
+            color: #383d41;
+            border: 1px solid #d6d8db;
+        }
+
+        .error {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <div class="header">
+            <span style="font-size: 1.8rem;">💬</span>
+            <h1>Reddit Sentiment Analyzer</h1>
+        </div>
+        <p class="subtitle">Classify Reddit comments into Positive, Neutral, or Negative.</p>
+
+        <textarea id="comment" placeholder="Type or paste a Reddit comment here..."></textarea>
+        <button id="btn" onclick="analyzeSentiment()">Analyze Sentiment</button>
+
+        <div id="result">
+            <p style="color: #6c757d; font-size: 0.9rem; margin-bottom: 8px;">Predicted Sentiment</p>
+            <div id="badge" class="badge"></div>
+        </div>
+    </div>
+
+    <script>
+        async function analyzeSentiment() {
+            const text = document.getElementById('comment').value.trim();
+            const resultDiv = document.getElementById('result');
+            const badge = document.getElementById('badge');
+            const btn = document.getElementById('btn');
+
+            if (!text) {
+                alert("Please enter comment text first.");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = "Analyzing...";
+            resultDiv.style.display = "none";
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    badge.className = "badge error";
+                    badge.innerText = data.error || "Prediction error";
+                } else {
+                    const sentiment = data.sentiment.charAt(0).toUpperCase() + data.sentiment.slice(1);
+                    badge.className = "badge";
+                    if (sentiment.toLowerCase().includes("pos")) {
+                        badge.classList.add("positive");
+                    } else if (sentiment.toLowerCase().includes("neg")) {
+                        badge.classList.add("negative");
+                    } else {
+                        badge.classList.add("neutral");
+                    }
+                    badge.innerText = sentiment;
+                }
+                resultDiv.style.display = "block";
+            } catch (e) {
+                badge.className = "badge error";
+                badge.innerText = "Failed to connect to server.";
+                resultDiv.style.display = "block";
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Analyze Sentiment";
+            }
+        }
+    </script>
+</body>
+
+</html>
