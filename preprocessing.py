@@ -14,7 +14,7 @@ STOPWORDS = set(stopwords.words("english")) - {'not', 'no', 'yes', 'yet', 'howev
 def preprocess_comment(comment):
     comment = comment.lower().strip()
     # pungtuation
-    comment = ' '.join([re.sub("[^A-Za-z0-9\s?!.,|*]",' ',word) for word in comment.split()])
+    comment = ' '.join([re.sub(r"[^A-Za-z0-9\s?!.,|*]", ' ', word) for word in comment.split()])
     # stopwords  
     comment = ' '.join([word for word in comment.split() if word not in STOPWORDS])
     # Lemmatizer
